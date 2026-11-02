@@ -1,0 +1,98 @@
+// SQLite for local development. On Vercel the build switches this to PostgreSQL
+// (prisma/match-provider.js); on an Iranian host, set the provider by hand or run that script.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// One oil-change shop on the platform.
+model Shop {
+  id        Int       @id @default(autoincrement())
+  name      String
+  ownerName String
+  phone     String
+  city      String
+  address   String
+  hours     String?
+  lat       Float?
+  lng       Float?
+  active    Boolean   @default(true)
+  users     User[]
+  cars      Car[]
+  services  Service[]
+  createdAt DateTime  @default(now())
+}
+
+// role: "admin" (the platform operator), "shop" (a shop owner, with shopId) or "customer".
+model User {
+  id        Int      @id @default(autoincrement())
+  role      String
+  name      String
+  phone     String   @unique
+  shopId    Int?
+  shop      Shop?    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  cars      Car[]
+  createdAt DateTime @default(now())
+
+  @@index([shopId])
+}
+
+// One car and its QR sticker. `code` is the random part of the sticker's link (/c/<code>).
+// `plate` is stored as "12-ب-345-67" (two digits, letter, three digits, region code).
+model Car {
+  id        Int       @id @default(autoincrement())
+  code      String    @unique
+  plate     String
+  model     String
+  year      Int?
+  ownerId   Int
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  shopId    Int
+  shop      Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  services  Service[]
+  createdAt DateTime  @default(now())
+
+  @@index([plate])
+  @@index([ownerId])
+  @@index([shopId])
+}
+
+// One visit: what was changed, at what odometer reading, and when the next one is due.
+// `items` is a comma-separated list of keys from lib/catalog.js (e.g. "oilFilter,airFilter").
+model Service {
+  id         Int       @id @default(autoincrement())
+  carId      Int
+  car        Car       @relation(fields: [carId], references: [id], onDelete: Cascade)
+  shopId     Int
+  shop       Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  date       DateTime  @default(now())
+  odometer   Int
+  oilBrand   String
+  oilGrade   String
+  oilLiters  Float
+  items      String    @default("")
+  price      Int // in toman
+  nextKm     Int
+  nextDate   DateTime
+  notes      String?
+  remindedAt DateTime?
+
+  @@index([carId, date])
+  @@index([shopId, date])
+  @@index([nextDate])
+}
+
+// Text-message login codes for customers. In the demo the code is shown on screen instead of sent.
+model LoginCode {
+  id        Int      @id @default(autoincrement())
+  phone     String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+}
