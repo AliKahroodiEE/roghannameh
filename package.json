@@ -1,0 +1,38 @@
+{
+  "name": "roghannameh",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "دفترچه‌ی سرویس دیجیتال خودرو با QR برای تعویض‌روغنی‌ها — Next.js + Prisma",
+  "scripts": {
+    "setup": "npm install && npm run db:setup",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "db:setup": "prisma db push && node --env-file=.env prisma/seed.js",
+    "db:reset": "prisma db push --force-reset && node --env-file=.env prisma/seed.js",
+    "vercel-build": "node prisma/match-provider.js && prisma generate && prisma db push --skip-generate && node prisma/seed.js --if-empty && next build"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "jose": "6.2.12",
+    "lucide-react": "^1.61.0",
+    "next": "16.4.3",
+    "qrcode": "^1.5.4",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.3",
+    "prisma": "6.19.3",
+    "tailwindcss": "^4"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "prisma@6.19.3": true
+  }
+}
